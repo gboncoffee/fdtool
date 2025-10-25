@@ -84,6 +84,7 @@ ParseElementOfUniverse(
         }
         *ret         = malloc(sizeof(**ret));
         (*ret)->term = tokens->token.content;
+        (*ret)->next = NULL;
         return ParseElementOfUniverse(tokens->next, &(*ret)->next, errorRet);
     case Comma:
         return ParseElementOfUniverse(tokens->next, ret, errorRet);
@@ -116,6 +117,7 @@ ParseElementOfLvalue(
     case Variable:
         *ret         = malloc(sizeof(**ret));
         (*ret)->term = tokens->token.content;
+        (*ret)->next = NULL;
         return ParseElementOfLvalue(tokens->next, &(*ret)->next, errorRet);
     default:
         *errorRet = UnexpectedToken;
@@ -148,6 +150,7 @@ ParseElementOfRvalue(
 
     *ret         = malloc(sizeof(**ret));
     (*ret)->term = tokens->token.content;
+    (*ret)->next = NULL;
     return ParseElementOfRvalue(tokens->next, &(*ret)->next, errorRet);
 }
 
@@ -169,8 +172,10 @@ ParseElementOfDependency(
     {
     case Variable:
         *ret                 = malloc(sizeof(**ret));
+        (*ret)->next         = NULL;
         (*ret)->lvalue       = malloc(sizeof(*(*ret)->lvalue));
         (*ret)->lvalue->term = tokens->token.content;
+        (*ret)->lvalue->next = NULL;
         rem =
             ParseElementOfLvalue(tokens->next, &(*ret)->lvalue->next, errorRet);
         if (*errorRet != NoError)
@@ -305,7 +310,7 @@ Tokenize(
             return NULL;
         }
         nextText = &nextText[1];
-        nextSize = nextSize + 1;
+        nextSize = nextSize - 1;
     }
 
     TokenList* const new = malloc(sizeof(*new));

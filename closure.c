@@ -46,10 +46,10 @@ AddAttributes(char* closure, TermList* rvalue)
     {
         if (!HasAttribute(closure, rvalue->term))
         {
-            size_t len     = strlen(closure);
-            closure[len]   = rvalue->term;
-            closure[len+1] = '\0';
-            changed        = true;
+            size_t len       = strlen(closure);
+            closure[len]     = rvalue->term;
+            closure[len + 1] = '\0';
+            changed          = true;
         }
         rvalue = rvalue->next;
     }
@@ -81,13 +81,13 @@ Closure(const Depset set, const char* const attributes)
     // Inicializa o closure com X
     char closure[27] = {0}; // 26 letras + '\0'
     strncpy(closure, attributes, 26);
-    
+
     // Itera até ponto fixo
     bool changed = true;
     while (changed)
     {
         changed = false;
-        
+
         // Para cada dependência L -> R em F
         DependencyList* dep = set.dependencies;
         while (dep != NULL)
@@ -101,10 +101,10 @@ Closure(const Depset set, const char* const attributes)
             dep = dep->next;
         }
     }
-    
+
     SortString(closure);
-    
+
     printf("%s\n", closure);
-    
+
     return 0;
 }

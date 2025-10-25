@@ -89,8 +89,9 @@ FdsFileOrDie(int argc, char* argv[])
     long size = ftell(fp);
     rewind(fp);
 
-    char* const buffer = malloc(size * sizeof(*buffer));
+    char* const buffer = malloc((size + 1) * sizeof(*buffer));
     fread(buffer, size, sizeof(*buffer), fp);
+    buffer[size] = '\0';
 
     Depset            set;
     const ParserError error = ParseFds(buffer, size, &set);
@@ -101,6 +102,9 @@ FdsFileOrDie(int argc, char* argv[])
     }
 
     PrintFds(set);
+
+    free(buffer);
+    fclose(fp);
 
     return set;
 }
@@ -119,16 +123,32 @@ main(int argc, char* argv[])
     {
         const char* const attributes = GetArg(argc, argv, "X");
         if (attributes != NULL)
-            return Closure(set, attributes);
+        {
+            int ret = Closure(set, attributes);
+            DropDepset(set);
+            return ret;
+        }
         return Usage();
     }
 
     if (strcmp(subcommand, "mincover") == 0)
-        return MinCover(set);
+    {
+        int ret = MinCover(set);
+        DropDepset(set);
+        return ret;
+    }
     if (strcmp(subcommand, "keys") == 0)
-        return Keys(set);
+    {
+        int ret = Keys(set);
+        DropDepset(set);
+        return ret;
+    }
     if (strcmp(subcommand, "normalform") == 0)
-        return NormalForm(set);
+    {
+        int ret = NormalForm(set);
+        DropDepset(set);
+        return ret;
+    }
 
     return Usage();
 }
