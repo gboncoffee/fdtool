@@ -101,8 +101,6 @@ FdsFileOrDie(int argc, char* argv[])
         exit(1);
     }
 
-    PrintFds(set);
-
     free(buffer);
     fclose(fp);
 

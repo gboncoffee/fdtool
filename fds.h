@@ -57,4 +57,6 @@ void DropTermList(TermList* const list);
 /* Remove before sending for the sake of everything. */
 void PrintFds(Depset set);
 
+void PrintDependencies(DependencyList* deps);
+
 #endif /* FDS_H_ */

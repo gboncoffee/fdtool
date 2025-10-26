@@ -3,7 +3,7 @@
 
 #include <alloca.h>
 #include <assert.h>
-#include <stdlib.h>
+#include <string.h>
 
 TermList*
 DupTermList(TermList* list, Arena* arena)
@@ -52,13 +52,59 @@ SeparateRvalues(DependencyList* list, Arena* arena)
     return new;
 }
 
-DependencyList*
-MinimizeLvalues(DependencyList* list, Arena* arena)
+int
+TermListLength(const TermList* const list)
 {
-    (void) list;
-    (void) arena;
-    assert(0 && "todo");
-    return NULL;
+    if (list == NULL)
+        return 0;
+    return 1 + TermListLength(list->next);
+}
+
+void
+CopyTermList(char* dest, const TermList* const list)
+{
+    if (list == NULL)
+    {
+        dest[0] = '\0';
+        return;
+    }
+
+    dest[0] = list->term;
+    CopyTermList(&dest[1], list->next);
+}
+
+TermList*
+MinimizeLvaluesInList(DependencyList* list, TermList* lvalue)
+{
+    if (lvalue->next == NULL)
+        return lvalue;
+
+    char* terms = alloca(sizeof(*terms) * (TermListLength(lvalue->next) + 1));
+    CopyTermList(terms, lvalue->next);
+    char closure[27];
+
+    GetClosure(list, terms, closure);
+    if (strchr(closure, list->rvalue->term) != NULL)
+        return MinimizeLvaluesInList(list, lvalue->next);
+
+    lvalue->next = MinimizeLvaluesInList(list, lvalue->next);
+    return lvalue;
+}
+
+void
+MinimizeLvalues(const Depset set, DependencyList* list, Arena* arena)
+{
+    if (list == NULL)
+        return;
+    if (list->lvalue->next == NULL)
+    {
+        MinimizeLvalues(set, list->next, arena);
+        return;
+    }
+
+    TermList* lvalues = MinimizeLvaluesInList(list, list->lvalue);
+    list->lvalue      = lvalues;
+    MinimizeLvalues(set, list->next, arena);
 }
 
 int
@@ -71,8 +117,8 @@ MinCover(const Depset set)
     newSet.universe = set.universe;
     newSet.dependencies =
         SeparateRvalues(DupDependencyList(set.dependencies, &arena), &arena);
-    //newSet.dependencies = MinimizeLvalues(newSet.dependencies, &arena);
-    PrintFds(newSet);
+    MinimizeLvalues(newSet, newSet.dependencies, &arena);
+    PrintDependencies(newSet.dependencies);
 
     DropArena(&arena);
 
