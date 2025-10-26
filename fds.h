@@ -44,7 +44,15 @@ int MinCover(const Depset set);
 int Keys(const Depset set);
 int NormalForm(const Depset set);
 
+void GetClosure(
+    const DependencyList* const dependencies,
+    const char* const           attributes,
+    char*                       ret
+);
+
 void DropDepset(Depset set);
+void DropDependencyList(DependencyList* const list);
+void DropTermList(TermList* const list);
 
 /* Remove before sending for the sake of everything. */
 void PrintFds(Depset set);

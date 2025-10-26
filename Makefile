@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS = -Wall -Wextra -std=c11 -pedantic -g -Og
 
 TARGET = fdtool
-OBJS = fdtool.o fds_parser.o closure.o min_cover.o keys.o normal_form.o
+OBJS = fdtool.o fds_parser.o closure.o min_cover.o keys.o normal_form.o arena.o
 
 .PHONY: target clean
 

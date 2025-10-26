@@ -1,50 +1,80 @@
+#include "arena.h"
 #include "fds.h"
 
+#include <alloca.h>
 #include <assert.h>
 #include <stdlib.h>
 
 TermList*
-DupTermList(TermList* list)
+DupTermList(TermList* list, Arena* arena)
 {
     if (list == NULL)
         return NULL;
 
-    TermList* new = malloc(sizeof(*new));
+    TermList* new = Alloc(arena, sizeof(*new));
     new->term     = list->term;
-    new->next     = DupTermList(list->next);
+    new->next     = DupTermList(list->next, arena);
     return new;
 }
 
 DependencyList*
-SeparateRvalues(DependencyList* list)
+DupDependencyList(DependencyList* list, Arena* arena)
 {
     if (list == NULL)
         return NULL;
 
+    DependencyList* new = Alloc(arena, sizeof(*new));
+    new->lvalue         = DupTermList(list->lvalue, arena);
+    new->rvalue         = DupTermList(list->rvalue, arena);
+    new->next           = DupDependencyList(list->next, arena);
+    return new;
+}
+
+DependencyList*
+SeparateRvalues(DependencyList* list, Arena* arena)
+{
+    if (list == NULL)
+        return NULL;
     if (list->rvalue->next == NULL)
     {
-        list->next = SeparateRvalues(list->next);
+        list->next = SeparateRvalues(list->next, arena);
         return list;
     }
 
-    DependencyList* this = malloc(sizeof(*this));
-    this->rvalue         = list->rvalue;
-    list->rvalue         = list->rvalue->next;
-    this->rvalue->next   = NULL;
-    this->lvalue         = DupTermList(this->lvalue);
-    this->next           = SeparateRvalues(list);
+    DependencyList* new = Alloc(arena, sizeof(*new));
+    new->lvalue         = DupTermList(list->lvalue, arena);
+    new->rvalue         = Alloc(arena, sizeof(*new->rvalue));
+    new->rvalue->term   = list->rvalue->term;
+    new->rvalue->next   = NULL;
+    list->rvalue        = list->rvalue->next;
+    new->next           = SeparateRvalues(list, arena);
 
-    return this;
+    return new;
+}
+
+DependencyList*
+MinimizeLvalues(DependencyList* list, Arena* arena)
+{
+    (void) list;
+    (void) arena;
+    assert(0 && "todo");
+    return NULL;
 }
 
 int
 MinCover(const Depset set)
 {
-    DependencyList* newList = SeparateRvalues(set.dependencies);
-    Depset          newSet;
-    newSet.universe     = set.universe;
-    newSet.dependencies = newList;
+    Arena arena;
+    NewArena(&arena, 4096);
+
+    Depset newSet;
+    newSet.universe = set.universe;
+    newSet.dependencies =
+        SeparateRvalues(DupDependencyList(set.dependencies, &arena), &arena);
+    //newSet.dependencies = MinimizeLvalues(newSet.dependencies, &arena);
     PrintFds(newSet);
+
+    DropArena(&arena);
 
     return 0;
 }

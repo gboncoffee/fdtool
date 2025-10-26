@@ -75,12 +75,15 @@ SortString(char* str)
     }
 }
 
-int
-Closure(const Depset set, const char* const attributes)
+void
+GetClosure(
+    const DependencyList* const dependencies,
+    const char* const           attributes,
+    char*                       ret
+)
 {
-    // Inicializa o closure com X
-    char closure[27] = {0}; // 26 letras + '\0'
-    strncpy(closure, attributes, 26);
+    ret[27] = '\0';
+    strncpy(ret, attributes, 26);
 
     // Itera até ponto fixo
     bool changed = true;
@@ -89,20 +92,28 @@ Closure(const Depset set, const char* const attributes)
         changed = false;
 
         // Para cada dependência L -> R em F
-        DependencyList* dep = set.dependencies;
+        const DependencyList* dep = dependencies;
         while (dep != NULL)
         {
             // Se L está contido em closure, adiciona R ao closure
-            if (IsSubset(dep->lvalue, closure))
+            if (IsSubset(dep->lvalue, ret))
             {
-                if (AddAttributes(closure, dep->rvalue))
+                if (AddAttributes(ret, dep->rvalue))
                     changed = true;
             }
             dep = dep->next;
         }
     }
 
-    SortString(closure);
+    SortString(ret);
+}
+
+int
+Closure(const Depset set, const char* const attributes)
+{
+    // Inicializa o closure com X
+    char closure[27] = {0}; // 26 letras + '\0'
+    GetClosure(set.dependencies, attributes, closure);
 
     printf("%s\n", closure);
 
