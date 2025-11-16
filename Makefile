@@ -15,4 +15,4 @@ $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) -o $@ -c $<
 
 clean:
-	-rm *.o $(TARGET) $(TARGET)-debug
+	-rm *.o $(TARGET)

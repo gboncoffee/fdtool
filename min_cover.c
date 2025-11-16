@@ -3,6 +3,7 @@
 
 #include <alloca.h>
 #include <assert.h>
+#include <stdbool.h>
 #include <string.h>
 
 TermList*
@@ -73,22 +74,82 @@ CopyTermList(char* dest, const TermList* const list)
     CopyTermList(&dest[1], list->next);
 }
 
-TermList*
-MinimizeLvaluesInList(DependencyList* list, TermList* lvalue)
+static void
+CopyTermListExceptNode(
+    char*                 dest,
+    const TermList* const list,
+    const TermList* const skipNode
+)
 {
-    if (lvalue->next == NULL)
-        return lvalue;
+    const TermList* cur = list;
+    int             i   = 0;
+    while (cur != NULL)
+    {
+        if (cur != skipNode)
+        {
+            dest[i++] = cur->term;
+        }
+        cur = cur->next;
+    }
+    dest[i] = '\0';
+}
 
-    char* terms = alloca(sizeof(*terms) * (TermListLength(lvalue->next) + 1));
-    CopyTermList(terms, lvalue->next);
-    char closure[27];
+static int
+TermListCount(const TermList* list)
+{
+    int count = 0;
+    while (list)
+    {
+        count += 1;
+        list = list->next;
+    }
+    return count;
+}
 
-    GetClosure(list, terms, closure);
-    if (strchr(closure, list->rvalue->term) != NULL)
-        return MinimizeLvaluesInList(list, lvalue->next);
+static void
+MinimizeLvalueForDependency(DependencyList* allDeps, DependencyList* dep)
+{
+    // tenta fazer remoções até que nenhum atributo seja estranho
+    bool changed = true;
+    while (changed && dep->lvalue != NULL && dep->lvalue->next != NULL)
+    {
+        changed        = false;
+        TermList* prev = NULL;
+        TermList* cur  = dep->lvalue;
 
-    lvalue->next = MinimizeLvaluesInList(list, lvalue->next);
-    return lvalue;
+        while (cur != NULL)
+        {
+            // constroi a string LHS sem o no atual
+            char lhs[27]     = {0};
+            char closure[27] = {0};
+            CopyTermListExceptNode(lhs, dep->lvalue, cur);
+
+            // se remover atual esvazia LHS, ainda é válido testar
+            GetClosure(allDeps, lhs, closure);
+            if (strchr(closure, dep->rvalue->term) != NULL)
+            {
+                // atual é estranho, desvincula-o
+                if (prev == NULL)
+                {
+                    dep->lvalue = cur->next;
+                    cur         = dep->lvalue;
+                }
+                else
+                {
+                    prev->next = cur->next;
+                    cur        = prev->next;
+                }
+                changed = true;
+                // reinicia a varredura a partir da (possivelmente) nova cabeça
+                break;
+            }
+            else
+            {
+                prev = cur;
+                cur  = cur->next;
+            }
+        }
+    }
 }
 
 void
@@ -96,15 +157,66 @@ MinimizeLvalues(const Depset set, DependencyList* list, Arena* arena)
 {
     if (list == NULL)
         return;
-    if (list->lvalue->next == NULL)
-    {
-        MinimizeLvalues(set, list->next, arena);
-        return;
-    }
-
-    TermList* lvalues = MinimizeLvaluesInList(list, list->lvalue);
-    list->lvalue      = lvalues;
+    MinimizeLvalueForDependency(set.dependencies, list);
     MinimizeLvalues(set, list->next, arena);
+}
+
+static DependencyList*
+DupDependencyListExcept(
+    DependencyList* list,
+    DependencyList* skip,
+    Arena*          arena
+)
+{
+    if (list == NULL)
+        return NULL;
+    if (list == skip)
+        return DupDependencyListExcept(list->next, skip, arena);
+
+    DependencyList* new = Alloc(arena, sizeof(*new));
+    new->lvalue         = DupTermList(list->lvalue, arena);
+    new->rvalue         = DupTermList(list->rvalue, arena);
+    new->next           = DupDependencyListExcept(list->next, skip, arena);
+    return new;
+}
+
+static void
+RemoveRedundantDependencies(Depset* set, Arena* arena)
+{
+    DependencyList* prev = NULL;
+    DependencyList* cur  = set->dependencies;
+    while (cur != NULL)
+    {
+        // constroi a string LHS da dependência atual
+        char lhs[27]     = {0};
+        char closure[27] = {0};
+        CopyTermList(lhs, cur->lvalue);
+
+        // duplica conjunto de dependências excluindo a dependência atual
+        DependencyList* others = DupDependencyListExcept(set->dependencies, cur, arena);
+        GetClosure(others, lhs, closure);
+
+        if (strchr(closure, cur->rvalue->term) != NULL)
+        {
+            // atual é redundante, remove-o da lista original
+            if (prev == NULL)
+            {
+                set->dependencies = cur->next;
+                cur               = set->dependencies;
+            }
+            else
+            {
+                prev->next = cur->next;
+                cur        = prev->next;
+            }
+            // continua sem avançar prev
+        }
+        else
+        {
+            prev = cur;
+            cur  = cur->next;
+        }
+    }
 }
 
 int
@@ -118,6 +230,7 @@ MinCover(const Depset set)
     newSet.dependencies =
         SeparateRvalues(DupDependencyList(set.dependencies, &arena), &arena);
     MinimizeLvalues(newSet, newSet.dependencies, &arena);
+    RemoveRedundantDependencies(&newSet, &arena);
     PrintDependencies(newSet.dependencies);
 
     DropArena(&arena);
