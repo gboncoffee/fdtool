@@ -57,7 +57,7 @@ AddAttributes(char* closure, TermList* rvalue)
 }
 
 // Ordena a string alfabeticamente ex: "DBCA" -> "ABCD"
-static void
+void
 SortString(char* str)
 {
     size_t len = strlen(str);

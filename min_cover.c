@@ -94,18 +94,6 @@ CopyTermListExceptNode(
     dest[i] = '\0';
 }
 
-static int
-TermListCount(const TermList* list)
-{
-    int count = 0;
-    while (list)
-    {
-        count += 1;
-        list = list->next;
-    }
-    return count;
-}
-
 static void
 MinimizeLvalueForDependency(DependencyList* allDeps, DependencyList* dep)
 {
@@ -193,7 +181,8 @@ RemoveRedundantDependencies(Depset* set, Arena* arena)
         CopyTermList(lhs, cur->lvalue);
 
         // duplica conjunto de dependências excluindo a dependência atual
-        DependencyList* others = DupDependencyListExcept(set->dependencies, cur, arena);
+        DependencyList* others =
+            DupDependencyListExcept(set->dependencies, cur, arena);
         GetClosure(others, lhs, closure);
 
         if (strchr(closure, cur->rvalue->term) != NULL)

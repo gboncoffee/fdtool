@@ -59,4 +59,8 @@ void PrintFds(Depset set);
 
 void PrintDependencies(DependencyList* deps);
 
+/* Some utils. */
+void CopyTermList(char* dest, const TermList* const list);
+void SortString(char* str);
+
 #endif /* FDS_H_ */
