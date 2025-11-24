@@ -1,0 +1,42 @@
+\documentclass{article}
+
+\usepackage[brazilian]{babel}
+\usepackage{fontenc}
+\usepackage{inputenc}
+
+\title{Trabalho de Banco de Dados}
+\author{Gabriel G. de Brito \\ ggb23@inf.ufpr.br \and Pedro H. M. de Lima \\ phml23@inf.ufpr.br}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Introdução}
+
+O objetivo do trabalho foi implementar uma ferramenta de linha de comando para manipulação em um esquema relacional. O software foi implementado com sucesso e todos os requisitos foram atendidos.
+
+\section{Complexidade}
+
+\subsection{Fecho de atributos $ X+ $}
+
+Itera-se até um ponto fixo. Para cada $ L \rightarrow REF $, caso $ LC = X+ $, adiciona-se $ R $ a $ X+ $. A complexidade do pior caso então é $ \mathcal{O}(|F| |U|^2) $.
+
+\subsection{Cobertura mínima}
+
+Desmembra-se o lado direito: $ L \rightarrow R $ se torna $ \{ L \rightarrow A | A \in R \} $. Remove-se os atributos desnecessários no lado esquerdo, isso é, remove-se $ A $ caso $ L - \{A\} \rightarrow A $ via fecho. Finalmente, removemos as dependências funcionais redundantes. Nos últimos dois passos, é necessário executar o fecho. A complexidade do pior caso então é $ \mathcal{O}(|F| + 2 (|F| |U|^2)) $.
+
+\subsection{Chaves candidatas}
+
+Para encontrar as chaves candidatas, primeiro separamos os elementos do universo entre os "necessários" (que nunca aparecem no lado direito) e os "outros". Para encontrar os necessários iteramos as dependências para cada elemento do universo. Para encontrar os outros, iteramos os necessários para cada elemento do universo. Finalmente, para encontrar as chaves, iteramos todos os subconjuntos de $ U $ que contém os elementos necessários. Portanto, a complexidade é $ \mathcal{O}(|U| |F| + |U|^2) $.
+
+\subsection{Verificação de BCNF e 3FN}
+
+Calcula-se a cobertura mínima unitária de $ G $. Calcula-se todas as chaves e os atributos primos. Para cada DF unitária $ L \rightarrow A \in G $ não trivial, caso o fecho de $ L $ seja $ U $, então $ L $ é superchave. Se não, BCNF é violada. 3FN é violada também caso $ A $ não seja primo. Portanto, a complexidade é $ \mathcal{O}(|F| + 2 (|F| |U|^2) + |U| |F| + |U|^2 + (|U| |F| |U|^2)) $.
+
+\section{Limitações e decisões}
+
+A ferramenta suporta apenas elementos que sejam uma única letra maíscula, de acordo com o formato do arquivo. Para simplificar a implementação, listas encadeadas são utilizadas com frequência, o que diminui a eficiência quanto a tempo de execução e uso de memória. Para simplificar o manejo de memória, muitas partes da aplicação utilizam arenas, que funcionam alocando toda a memória do trecho de código em regiões contínuas, e liberando toda essa memória de uma só vez quando esse trecho acaba.
+
+\end{document}

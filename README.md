@@ -1,15 +1,8 @@
 # Trabalho de Banco de Dados
 
-## Visão Geral
-Objetivo: Implementar em linguagem C, uma ferramenta de linha de comando (fdtool) para manipular Dependências Funcionais (DFs) em um esquema relacional com atributos no intervalo de A..Z.
+## Compilação
 
-1) Cálculo do fecho X+ de um conjunto de atributos X C= (contido ou igual) U dado F.
-
-2) Cobertura mínima de F (RHS unitário, remoção de atributos estranhos e DFs redundantes).
-
-3) Chaves candidatas (todas as mínimas K tais que K+ = U).
-
-4) Verificação de formas normais: BCNF e 3NF.
+Executar `make` no diretório raíz.
 
 ## Formato de Entrada (.fds)
 Arquivo texto com espaços ignorados e DF's separadas por vírgula ou ponto e vírgula.
@@ -17,16 +10,14 @@ Arquivo texto com espaços ignorados e DF's separadas por vírgula ou ponto e v�
 Exemplo:
 ```
 U = {A,B,C,D,E}
-f = { A ->BC, C->D, BD->E }
+F = { A ->BC, C->D, BD->E }
 ```
 
-U é o universo de atributos e f é o conjunto de dependências funcionais, permitindo múltiplos atributos em LHS e RHS.
+U é o universo de atributos e F é o conjunto de dependências funcionais, permitindo múltiplos atributos em LHS e RHS.
 
 ## Interface de Linha de Comando
 
-Compilar para o binário fdtool. Subcomandos obrigatórios:
-
-``` bash
+```bash
 # Fecho X+
 fdtool closure --fds <arquivo.fds> --X <ATRIBUTOS>
 
@@ -40,10 +31,11 @@ fdtool keys --fds <arquivo.fds>
 fdtool normalform --fds <arquivo.fds>
 ```
 
-### saída esperada
+### Saída esperada
 closure: imprime X+ ordenado como string, p.ex., ABCDE.
 
 minicover: uma DF por linha no formato L->A.
+
 keys: cada chave (ordenada) em uma linha, p.ex., 
 ``` bash
 AC 
@@ -59,19 +51,6 @@ VIOLATION 3NF: B->C (C not prime, B not superkey)
 ```
 
 ## Requisitos Algoritmicos
-### Fecho de atributos X+
-ideia: iterar até ponto fixo; para cada L -> R E F, se L C= X+, adicionar R a X+.
-
-Complexidade: O(|F| * |U|²) no pior caso (para |U| <= 26 é aceitável).
-
-### Cobertura mínima
-1) Desmembrar RHS: L -> R vira { L -> A | A E R }.
-2) Remover atributos estranhos no LHS: para cada a E L, testar se ( L \ {a} ) -> A é implicada (via fecho).
-3) Remover DF redundante: testar se F \ {f} implica f.
-
-### Chaves candidatas
-
-Dicas: atributos que nunca aparecem em RHS devem estar em toda chave. Usar BFS com poda a partir dos essenciais: quando X+ = U, guardar C e não explorar superconjuntos de X.
 
 ### Verificação de BCNF e 3FN
 

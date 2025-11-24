@@ -3,3 +3,10 @@ fdtool
 .cache/*
 compile_commands.json
 .vscode/*
+relatorio/relatorio.aux
+.gitignore
+relatorio/relatorio.fdb_latexmk
+.gitignore
+relatorio/relatorio.log
+relatorio/relatorio.fls
+relatorio/relatorio.synctex.gz
