@@ -3,7 +3,7 @@
 # Script para testar os comandos do fdtool com todos os arquivos de teste
 
 FDTOOL="./fdtool"
-TEST_DIR="testes"
+TEST_DIR="exemplos"
 
 # Cores para output
 GREEN='\033[0;32m'
