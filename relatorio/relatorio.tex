@@ -39,4 +39,102 @@ Calcula-se a cobertura mínima unitária de $ G $. Calcula-se todas as chaves e 
 
 A ferramenta suporta apenas elementos que sejam uma única letra maíscula, de acordo com o formato do arquivo. Para simplificar a implementação, listas encadeadas são utilizadas com frequência, o que diminui a eficiência quanto a tempo de execução e uso de memória. Para simplificar o manejo de memória, muitas partes da aplicação utilizam arenas, que funcionam alocando toda a memória do trecho de código em regiões contínuas, e liberando toda essa memória de uma só vez quando esse trecho acaba.
 
+\section{Estudos de Caso}
+
+Para validar a implementação da ferramenta, foram executados três estudos de caso com diferentes conjuntos de dependências funcionais. A seguir, apresentamos os resultados obtidos para cada caso.
+
+\subsection{Caso 1: Exemplo com violações de BCNF e 3FN}
+
+\textbf{Entrada:}
+\begin{itemize}
+    \item $ U = \{A, B, C, D, E\} $
+    \item $ F = \{A \rightarrow BC, C \rightarrow D, BD \rightarrow E\} $
+\end{itemize}
+
+\textbf{Cobertura mínima:}
+
+O algoritmo de cobertura mínima produziu o seguinte conjunto equivalente:
+\begin{itemize}
+    \item $ A \rightarrow B $
+    \item $ A \rightarrow C $
+    \item $ C \rightarrow D $
+    \item $ BD \rightarrow E $
+\end{itemize}
+
+\textbf{Chaves candidatas:}
+
+A única chave candidata encontrada foi $ \{A\} $.
+
+\textbf{Verificação de formas normais:}
+
+A relação viola tanto BCNF quanto 3FN:
+\begin{itemize}
+    \item \textit{BCNF}: Violada por $ BD \rightarrow E $ ($ BD $ não é superchave) e $ C \rightarrow D $ ($ C $ não é superchave)
+    \item \textit{3FN}: Violada por $ BD \rightarrow E $ ($ E $ não é primo e $ BD $ não é superchave) e $ C \rightarrow D $ ($ D $ não é primo e $ C $ não é superchave)
+\end{itemize}
+
+\subsection{Caso 2: exemplo em 3FN mas não em BCNF}
+
+\textbf{Entrada:}
+\begin{itemize}
+    \item $ U = \{A, B, C\} $
+    \item $ F = \{AB \rightarrow C, C \rightarrow B\} $
+\end{itemize}
+
+\textbf{Cobertura Mínima:}
+
+O conjunto já está em forma mínima:
+\begin{itemize}
+    \item $ AB \rightarrow C $
+    \item $ C \rightarrow B $
+\end{itemize}
+
+\textbf{Chaves Candidatas:}
+
+Foram encontradas duas chaves candidatas: $ \{AC\} $ e $ \{AB\} $.
+
+\textbf{Verificação de Formas Normais:}
+
+Este é um exemplo clássico de relação que está em 3FN mas não em BCNF:
+\begin{itemize}
+    \item \textit{BCNF}: Violada por $ C \rightarrow B $ ($ C $ não é superchave)
+    \item \textit{3FN}: Satisfeita, pois $ B $ é atributo primo (faz parte de uma chave candidata)
+\end{itemize}
+
+\subsection{Caso 3: exemplo com múltiplas violações}
+
+\textbf{Entrada:}
+\begin{itemize}
+    \item $ U = \{A, B, C, D, E\} $
+    \item $ F = \{AB \rightarrow C, BC \rightarrow D, CD \rightarrow A, D \rightarrow E\} $
+\end{itemize}
+
+\textbf{Cobertura mínima:}
+
+O conjunto já está em forma mínima:
+\begin{itemize}
+    \item $ AB \rightarrow C $
+    \item $ BC \rightarrow D $
+    \item $ CD \rightarrow A $
+    \item $ D \rightarrow E $
+\end{itemize}
+
+\textbf{Chaves candidatas:}
+
+Foram encontradas duas chaves candidatas: $ \{BC\} $ e $ \{BA\} $.
+
+\textbf{Verificação de formas normais:}
+
+A relação viola tanto BCNF quanto 3FN:
+\begin{itemize}
+    \item \textit{BCNF}: Violada por $ D \rightarrow E $ ($ D $ não é superchave) e $ CD \rightarrow A $ ($ CD $ não é superchave)
+    \item \textit{3FN}: Violada por $ D \rightarrow E $ ($ E $ não é primo e $ D $ não é superchave)
+\end{itemize}
+
+Note que $ CD \rightarrow A $ viola BCNF mas não viola 3FN, pois $ A $ é atributo primo.
+
+\subsection{Análise dos resultados}
+
+Os três casos de teste demonstram o funcionamento correto da ferramenta. O algoritmo de cobertura mínima simplifica adequadamente os conjuntos de dependências funcionais, removendo redundâncias e atributos desnecessários. Além disso, a detecção de chaves candidatas identifica corretamente todos os conjuntos mínimos de atributos que determinam funcionalmente todos os outros atributos. A verificação de formas normais distingue corretamente entre BCNF e 3FN, identificando violações específicas e explicando o motivo de cada violação. O caso 2 é particularmente interessante pois ilustra uma situação comum em que uma relação satisfaz 3FN mas não BCNF, demonstrando que 3FN é menos restritiva que BCNF quando atributos primos estão envolvidos.
+
 \end{document}

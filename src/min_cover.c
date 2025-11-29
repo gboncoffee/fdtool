@@ -1,5 +1,5 @@
-#include "arena.h"
-#include "fds.h"
+#include "../includes/arena.h"
+#include "../includes/fds.h"
 
 #include <alloca.h>
 #include <assert.h>

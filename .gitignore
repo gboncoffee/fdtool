@@ -10,3 +10,4 @@ relatorio/relatorio.fdb_latexmk
 relatorio/relatorio.log
 relatorio/relatorio.fls
 relatorio/relatorio.synctex.gz
+build/**
